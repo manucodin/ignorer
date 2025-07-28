@@ -105,6 +105,6 @@ jobs:
         This PR was automatically created by the release workflow." \
           --head "${BRANCH_NAME}" \
           --base main \
-          --assignee "@me"
+          --assignee "@manucodin"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
