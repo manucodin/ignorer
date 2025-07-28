@@ -145,6 +145,20 @@ homebrew-sha256: build-darwin ## Calculate SHA256 for Homebrew formula
 	@echo "SHA256 for Homebrew formula:"
 	@shasum -a 256 bin/$(BINARY_DARWIN) | cut -d' ' -f1
 
+homebrew-update-formula: ## Update Homebrew formula with latest version (for testing)
+	@if [ -z "$(VERSION)" ]; then \
+		echo "❌ VERSION is required. Usage: make homebrew-update-formula VERSION=1.0.0"; \
+		exit 1; \
+	fi
+	@echo "📝 Updating Homebrew formula for version $(VERSION)..."
+	@TARBALL_URL="https://github.com/ignorer/ignorer/archive/v$(VERSION).tar.gz"; \
+	curl -sL "$$TARBALL_URL" -o "ignorer-$(VERSION).tar.gz"; \
+	SHA256=$$(shasum -a 256 "ignorer-$(VERSION).tar.gz" | cut -d' ' -f1); \
+	sed -i.bak "s|url \".*\"|url \"$$TARBALL_URL\"|g" Formula/ignorer.rb; \
+	sed -i.bak "s|sha256 \".*\"|sha256 \"$$SHA256\"|g" Formula/ignorer.rb; \
+	rm -f Formula/ignorer.rb.bak "ignorer-$(VERSION).tar.gz"; \
+	echo "✅ Updated Homebrew formula for version $(VERSION) with SHA256: $$SHA256"
+
 help: ## Display this help message
 	@echo "Available targets:"
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) 
