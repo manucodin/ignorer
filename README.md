@@ -17,8 +17,16 @@ A powerful CLI tool to generate `.gitignore` files from predefined templates for
 ### Homebrew (Recommended for macOS)
 
 ```bash
-# This will be available after publishing to Homebrew
+# Add the tap and install ignorer
+brew tap ignorer/ignorer https://github.com/ignorer/ignorer.git
 brew install ignorer
+```
+
+For updating to the latest version:
+
+```bash
+brew update
+brew upgrade ignorer
 ```
 
 ### Manual Installation
@@ -181,6 +189,30 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Commit your changes (`git commit -m 'Add some amazing feature'`)
 5. Push to the branch (`git push origin feature/amazing-feature`)
 6. Open a Pull Request
+
+### Homebrew Integration
+
+This project includes automated Homebrew formula updates:
+
+- The Homebrew formula is located in `Formula/ignorer.rb`
+- When a new version is tagged (e.g., `v1.0.0`), the release workflow automatically:
+  1. Builds binaries for all platforms
+  2. Creates a GitHub release
+  3. Downloads the source tarball and calculates its SHA256
+  4. Updates the Homebrew formula with the new version and SHA256
+  5. Commits and pushes the updated formula
+
+### Creating a Release
+
+To create a new release:
+
+```bash
+# Create and push a new tag
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The GitHub Actions workflow will handle the rest automatically.
 
 ## License
 
