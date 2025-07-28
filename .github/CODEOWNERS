@@ -1,0 +1,17 @@
+# Global rule - All files require approval from the repository owner
+* @manuelrodriguezsebastian
+
+# Core application files require extra attention
+/cmd/ @manuelrodriguezsebastian
+/internal/ @manuelrodriguezsebastian
+
+# Templates require careful review
+/internal/core/templates/ @manuelrodriguezsebastian
+
+# CI/CD configuration requires owner approval
+/.github/ @manuelrodriguezsebastian
+/Makefile @manuelrodriguezsebastian
+
+# Documentation should be reviewed
+/README.md @manuelrodriguezsebastian
+/LICENSE @manuelrodriguezsebastian 
