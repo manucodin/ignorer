@@ -1,0 +1,81 @@
+# Kubernetes secrets and sensitive data
+secrets/
+*-secret.yaml
+*-secret.yml
+*.secret
+kubeconfig
+.kube/config
+
+# Helm
+.helm/
+helm-*.tgz
+charts/*.tgz
+requirements.lock
+
+# Kustomize
+kustomization.yaml.bak
+
+# Local development
+.env
+.env.local
+*.env
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Kubectl cache
+.kubectl_cache/
+
+# Terraform (often used with K8s)
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Docker
+.dockerignore
+Dockerfile.bak
+
+# CI/CD
+.gitlab-ci.yml.bak
+.github/workflows/*.bak
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Local cluster data (kind, k3d, etc.)
+.kind/
+.k3d/
+
+# Operator SDK
+bin/
+testbin/
+cover.out
+
+# Generated files
+generated/
+auto-generated/ 
