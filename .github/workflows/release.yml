@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   actions: read
+  pull-requests: write
 
 env:
   GO_VERSION: '1.21'
@@ -22,6 +23,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
         
     - name: Set up Go
       uses: actions/setup-go@v4
@@ -54,13 +56,22 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
-    - name: Update Homebrew Formula
+    - name: Update Homebrew Formula and Create PR
       run: |
         # Extract version from tag (remove 'v' prefix)
         VERSION=${GITHUB_REF#refs/tags/v}
+        BRANCH_NAME="homebrew-update-v${VERSION}"
+        
+        # Configure git
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        # Create and checkout new branch from main
+        git fetch origin main
+        git checkout -b "${BRANCH_NAME}" 
         
         # Create tarball URL
-        TARBALL_URL="https://github.com/ignorer/ignorer/archive/v${VERSION}.tar.gz"
+        TARBALL_URL="https://github.com/manucodin/ignorer/archive/v${VERSION}.tar.gz"
         
         # Download tarball and calculate SHA256
         curl -sL "$TARBALL_URL" -o "ignorer-${VERSION}.tar.gz"
@@ -75,10 +86,25 @@ jobs:
         
         echo "Updated Homebrew formula for version $VERSION with SHA256: $SHA256"
         
-    - name: Commit and Push Homebrew Formula Update
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
+        # Commit changes
         git add Formula/ignorer.rb
-        git commit -m "Update Homebrew formula to ${GITHUB_REF#refs/tags/}" || exit 0
-        git push origin HEAD:main || git push origin HEAD:master 
+        git commit -m "Update Homebrew formula to v${VERSION}" || exit 0
+        
+        # Push the branch
+        git push origin "${BRANCH_NAME}"
+        
+        # Create Pull Request using GitHub CLI
+        gh pr create \
+          --title "🍺 Update Homebrew formula to v${VERSION}" \
+          --body "Automated update of Homebrew formula for release v${VERSION}
+
+        **Changes:**
+        - Updated formula URL to point to v${VERSION} release
+        - Updated SHA256 checksum to ${SHA256}
+        
+        This PR was automatically created by the release workflow." \
+          --head "${BRANCH_NAME}" \
+          --base main \
+          --assignee "@me"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
