@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	
+
 	"github.com/ignorer/ignorer/internal/core"
 )
 
@@ -23,7 +23,11 @@ func TestMainCommand(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get current dir: %v", err)
 	}
-	defer os.Chdir(oldDir)
+	defer func() {
+		if err := os.Chdir(oldDir); err != nil {
+			t.Errorf("Failed to restore original directory: %v", err)
+		}
+	}()
 
 	err = os.Chdir(tempDir)
 	if err != nil {
@@ -121,26 +125,26 @@ func TestListCommand(t *testing.T) {
 	if err != nil {
 		t.Fatalf("List command failed: %v", err)
 	}
-	
+
 	// The function executed successfully, which means it can load templates
-	// and display them. Since it prints directly to stdout, we verify the 
+	// and display them. Since it prints directly to stdout, we verify the
 	// core functionality works by checking the template manager directly.
-	
+
 	tm := core.NewTemplateManager()
 	err = tm.LoadTemplates()
 	if err != nil {
 		t.Fatalf("Failed to load templates: %v", err)
 	}
-	
+
 	templates := tm.ListTemplates()
-	
+
 	// Verify common templates exist
 	commonTemplates := []string{"go", "swift", "python", "node", "docker"}
 	templateMap := make(map[string]bool)
 	for _, template := range templates {
 		templateMap[template] = true
 	}
-	
+
 	for _, expected := range commonTemplates {
 		if !templateMap[expected] {
 			t.Errorf("Expected template '%s' not found", expected)

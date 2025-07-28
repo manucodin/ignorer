@@ -6,10 +6,20 @@ BINARY_LINUX=$(BINARY_NAME)_linux
 BINARY_DARWIN=$(BINARY_NAME)_darwin
 BINARY_WINDOWS=$(BINARY_NAME).exe
 
-VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+# Version logic: try to get from git tags, fallback to dev
+GIT_TAG := $(shell git describe --tags --exact-match 2>/dev/null)
+GIT_DESCRIBE := $(shell git describe --tags --always --dirty 2>/dev/null)
+VERSION ?= $(shell \
+	if [ -n "$(GIT_TAG)" ]; then \
+		echo "$(GIT_TAG)" | sed 's/^v//'; \
+	elif [ -n "$(GIT_DESCRIBE)" ]; then \
+		echo "$(GIT_DESCRIBE)" | sed 's/^v//'; \
+	else \
+		echo "dev"; \
+	fi)
 LDFLAGS=-ldflags "-X main.version=$(VERSION)"
 
-.PHONY: all build build-all clean test test-coverage run help install uninstall
+.PHONY: all build build-all clean test test-coverage run help install uninstall version-info
 .DEFAULT_GOAL := help
 
 all: test build ## Run tests and build binary
@@ -45,13 +55,52 @@ test-coverage: ## Run tests with coverage
 run: build ## Build and run the binary
 	./bin/$(BINARY_NAME)
 
-install: build ## Install the binary to GOPATH/bin
+install: build ## Install the binary (tries /usr/local/bin, falls back to ~/.local/bin)
 	@echo "Installing $(BINARY_NAME)..."
-	cp bin/$(BINARY_NAME) $(GOPATH)/bin/$(BINARY_NAME)
+	@if [ -w /usr/local/bin ] 2>/dev/null; then \
+		echo "📦 Installing to /usr/local/bin (system-wide)"; \
+		cp bin/$(BINARY_NAME) /usr/local/bin/$(BINARY_NAME); \
+		echo "✅ $(BINARY_NAME) installed successfully!"; \
+	elif sudo -n true 2>/dev/null; then \
+		echo "📦 Installing to /usr/local/bin (with sudo)"; \
+		sudo cp bin/$(BINARY_NAME) /usr/local/bin/$(BINARY_NAME); \
+		echo "✅ $(BINARY_NAME) installed successfully!"; \
+	else \
+		echo "🔒 No sudo access, installing locally to ~/.local/bin"; \
+		mkdir -p ~/.local/bin; \
+		cp bin/$(BINARY_NAME) ~/.local/bin/$(BINARY_NAME); \
+		echo "✅ $(BINARY_NAME) installed locally!"; \
+		echo "💡 Add to your shell profile (~/.zshrc or ~/.bashrc):"; \
+		echo "   export PATH=\"\$$HOME/.local/bin:\$$PATH\""; \
+	fi
 
-uninstall: ## Remove the binary from GOPATH/bin
+uninstall: ## Remove the binary from all locations
 	@echo "Uninstalling $(BINARY_NAME)..."
-	rm -f $(GOPATH)/bin/$(BINARY_NAME)
+	@removed=false; \
+	if [ -f /usr/local/bin/$(BINARY_NAME) ]; then \
+		echo "🗑️  Removing from /usr/local/bin..."; \
+		if [ -w /usr/local/bin ] 2>/dev/null; then \
+			rm -f /usr/local/bin/$(BINARY_NAME); \
+		else \
+			sudo rm -f /usr/local/bin/$(BINARY_NAME); \
+		fi; \
+		removed=true; \
+	fi; \
+	if [ -f ~/.local/bin/$(BINARY_NAME) ]; then \
+		echo "🗑️  Removing from ~/.local/bin..."; \
+		rm -f ~/.local/bin/$(BINARY_NAME); \
+		removed=true; \
+	fi; \
+	if [ -n "$(GOPATH)" ] && [ -f $(GOPATH)/bin/$(BINARY_NAME) ]; then \
+		echo "🗑️  Removing from $(GOPATH)/bin..."; \
+		rm -f $(GOPATH)/bin/$(BINARY_NAME); \
+		removed=true; \
+	fi; \
+	if [ "$$removed" = "true" ]; then \
+		echo "✅ $(BINARY_NAME) uninstalled successfully!"; \
+	else \
+		echo "ℹ️  $(BINARY_NAME) was not found in any installation location."; \
+	fi
 
 clean: ## Clean build artifacts
 	@echo "Cleaning..."
@@ -80,6 +129,16 @@ release-prep: clean test-coverage build-all ## Prepare for release
 	@echo "Release preparation complete"
 	@echo "Binaries available in ./bin/"
 	@ls -la ./bin/
+
+version-info: ## Show version information
+	@echo "🏷️  Version Information:"
+	@echo "   Git Tag (exact):      $(GIT_TAG)"
+	@echo "   Git Describe:         $(GIT_DESCRIBE)"  
+	@echo "   Final Version:        $(VERSION)"
+	@echo ""
+	@echo "💡 To create a new release:"
+	@echo "   git tag v1.0.0"
+	@echo "   git push origin v1.0.0"
 
 # Homebrew formula helpers
 homebrew-sha256: build-darwin ## Calculate SHA256 for Homebrew formula
