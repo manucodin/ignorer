@@ -10,29 +10,40 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Version is set at build time via ldflags
+var version = "dev"
+
 var rootCmd = &cobra.Command{
 	Use:   "ignorer [templates...]",
-	Short: "Generate .gitignore files from predefined templates",
-	Long: `Ignorer is a CLI tool that generates .gitignore files by combining 
+	Short: "🚫 Generate .gitignore files from predefined templates",
+	Long: `🚫 Ignorer - Smart .gitignore Generator
+
+Ignorer is a CLI tool that generates .gitignore files by combining 
 predefined templates for different programming languages and frameworks.
 
-Examples:
-  ignorer swift xcode     # Create .gitignore for Swift and Xcode
-  ignorer go docker       # Create .gitignore for Go and Docker
-  ignorer list           # List all available templates`,
-	Args: cobra.MinimumNArgs(1),
+✨ Examples:
+  🍎 ignorer swift xcode      # Create .gitignore for Swift and Xcode
+  🐹 ignorer go docker        # Create .gitignore for Go and Docker  
+  ⚛️  ignorer react node       # Create .gitignore for React and Node
+  📋 ignorer list            # List all available templates
+
+🔗 More info: https://github.com/ignorer/ignorer`,
+	Args: cobra.ArbitraryArgs,
 	RunE: generateGitignore,
 }
 
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List all available templates",
-	Long:  "Display all available .gitignore templates for different languages and frameworks",
+	Short: "📋 List all available templates",
+	Long:  "📋 Display all available .gitignore templates for different languages and frameworks",
 	RunE:  listTemplates,
 }
 
 func init() {
 	rootCmd.AddCommand(listCmd)
+
+	// Add version flag
+	rootCmd.Flags().BoolP("version", "v", false, "Show version information")
 }
 
 func main() {
@@ -43,6 +54,17 @@ func main() {
 }
 
 func generateGitignore(cmd *cobra.Command, args []string) error {
+	// Handle version flag
+	if versionFlag, _ := cmd.Flags().GetBool("version"); versionFlag {
+		fmt.Printf("🚫 v%s\n", version)
+		return nil
+	}
+
+	// If no arguments provided and no version flag, show help
+	if len(args) == 0 {
+		return cmd.Help()
+	}
+
 	if len(args) == 1 && args[0] == "list" {
 		return listTemplates(cmd, args)
 	}
