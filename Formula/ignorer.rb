@@ -1,8 +1,8 @@
 class Ignorer < Formula
   desc "Smart .gitignore generator - Generate .gitignore files from predefined templates"
   homepage "https://github.com/manucodin/ignorer"
-  url "https://github.com/manucodin/ignorer/archive/v0.1.7.tar.gz"
-  sha256 "a0ba33ab6161c87c348a7a017f1c0991c0abd0402273498cf3bdcac5a5bf306d"
+  url "https://github.com/manucodin/ignorer/archive/v0.1.8.tar.gz"
+  sha256 "85eca2b0d9bdb915e7686b9f437601d65c2e13d740be57d84f3c199322ca46c5"
   license "MIT"
   
   depends_on "go" => :build
